@@ -111,14 +111,15 @@
         .download-btn {
             background-color: #5bc0de;
         }
+        #photo-actions {
+            margin-top: 20px;
+            display: none;
+        }
     </style>
 </head>
 <body>
 
-    <!-- Titre en haut de la page -->
     <h1>Signaler un Incident</h1>
-
-    <!-- Bouton pour fermer l'application -->
     <button id="closeBtn">✖</button>
 
     <div class="container">
@@ -126,7 +127,6 @@
         <button class="button" id="record-video">Enregistrer une Vidéo</button>
         <button class="button" id="record-audio">Enregistrer Audio</button>
 
-        <!-- Zone pour prendre une photo -->
         <div class="camera-container">
             <button id="captureBtn" class="button">Prendre une Photo</button>
             <video id="video" width="100%" height="auto" autoplay></video>
@@ -136,7 +136,7 @@
 
         <button id="clearBtn" class="button" style="display: none;">Tout Supprimer</button>
         <div id="recordingStatus" style="display: none;">Enregistrement en cours...</div>
-        <div id="photo-actions" style="display: none;">
+        <div id="photo-actions">
             <button class="modify-btn" id="modify-photo">Modifier la Photo</button>
             <button class="delete-btn" id="delete-photo">Supprimer la Photo</button>
             <button class="download-btn" id="download-photo" style="display: none;">Télécharger la Photo</button>
@@ -168,7 +168,7 @@
                 const videoDevices = devices.filter(device => device.kind === 'videoinput');
                 const backCamera = videoDevices.find(device => device.label.toLowerCase().includes('back') || device.label.toLowerCase().includes('arrière'));
 
-                const constraints = backCamera ? { video: { deviceId: backCamera.deviceId } } : { video: true }; // Si caméra arrière disponible, l'utiliser.
+                const constraints = backCamera ? { video: { deviceId: backCamera.deviceId } } : { video: true };
 
                 return navigator.mediaDevices.getUserMedia(constraints);
             })
@@ -297,4 +297,3 @@
 
 </body>
 </html>
-
