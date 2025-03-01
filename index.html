@@ -12,9 +12,9 @@
         }
         body {
             font-family: Arial, sans-serif;
-            background-color: white; /* Fond d'écran blanc */
+            background-color: white;
             color: black;
-            height: 100vh; /* Prend toute la hauteur de l'écran */
+            height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -28,6 +28,7 @@
             border-radius: 8px;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
             margin-bottom: 20px;
+            position: relative;
         }
         h1 {
             text-align: center;
@@ -78,12 +79,47 @@
         #captureBtn {
             margin-bottom: 20px;
         }
+        #closeBtn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 24px;
+            color: #333;
+            background: none;
+            border: none;
+            cursor: pointer;
+        }
+        #recordingStatus {
+            margin-top: 10px;
+            font-weight: bold;
+            color: red;
+        }
+        .modify-btn, .delete-btn, .download-btn {
+            margin-top: 10px;
+            display: inline-block;
+            padding: 10px;
+            background-color: #f0ad4e;
+            color: white;
+            font-size: 14px;
+            cursor: pointer;
+            border-radius: 4px;
+            border: none;
+        }
+        .delete-btn {
+            background-color: #d9534f;
+        }
+        .download-btn {
+            background-color: #5bc0de;
+        }
     </style>
 </head>
 <body>
 
     <!-- Titre en haut de la page -->
     <h1>Signaler un Incident</h1>
+
+    <!-- Bouton pour fermer l'application -->
+    <button id="closeBtn">✖</button>
 
     <div class="container">
         <!-- Boutons pour prendre une photo ou enregistrer une vidéo -->
@@ -99,6 +135,12 @@
         </div>
 
         <button id="clearBtn" class="button" style="display: none;">Tout Supprimer</button>
+        <div id="recordingStatus" style="display: none;">Enregistrement en cours...</div>
+        <div id="photo-actions" style="display: none;">
+            <button class="modify-btn" id="modify-photo">Modifier la Photo</button>
+            <button class="delete-btn" id="delete-photo">Supprimer la Photo</button>
+            <button class="download-btn" id="download-photo" style="display: none;">Télécharger la Photo</button>
+        </div>
     </div>
 
 <script>
@@ -108,12 +150,28 @@
     const photo = document.getElementById('photo');
     const captureBtn = document.getElementById('captureBtn');
     const clearBtn = document.getElementById('clearBtn');
+    const closeBtn = document.getElementById('closeBtn');
+    const recordingStatus = document.getElementById('recordingStatus');
+    const modifyPhotoBtn = document.getElementById('modify-photo');
+    const deletePhotoBtn = document.getElementById('delete-photo');
+    const downloadPhotoBtn = document.getElementById('download-photo');
+    const photoActions = document.getElementById('photo-actions');
     
     let userLocation = {}; // Pour stocker la géolocalisation
+    let mediaRecorder;
+    let recordedChunks = [];
 
-    // Demander l'accès à la caméra et démarrer le flux vidéo
+    // Demander l'accès à la caméra arrière
     function startVideo() {
-        navigator.mediaDevices.getUserMedia({ video: true })
+        navigator.mediaDevices.enumerateDevices()
+            .then(devices => {
+                const videoDevices = devices.filter(device => device.kind === 'videoinput');
+                const backCamera = videoDevices.find(device => device.label.toLowerCase().includes('back') || device.label.toLowerCase().includes('arrière'));
+
+                const constraints = backCamera ? { video: { deviceId: backCamera.deviceId } } : { video: true }; // Si caméra arrière disponible, l'utiliser.
+
+                return navigator.mediaDevices.getUserMedia(constraints);
+            })
             .then((stream) => {
                 video.srcObject = stream;
             })
@@ -128,7 +186,6 @@
             navigator.geolocation.getCurrentPosition(function (position) {
                 userLocation.latitude = position.coords.latitude;
                 userLocation.longitude = position.coords.longitude;
-                console.log("Latitude: " + userLocation.latitude + ", Longitude: " + userLocation.longitude);
             }, function (error) {
                 alert("Erreur lors de la récupération de la géolocalisation: " + error.message);
             });
@@ -151,6 +208,10 @@
         photo.style.display = 'block';  // Afficher l'image capturée
         captureBtn.style.display = 'none';  // Cacher le bouton de capture
         clearBtn.style.display = 'block';  // Afficher le bouton "Tout Supprimer"
+        photoActions.style.display = 'block'; // Afficher les boutons Modifier et Supprimer
+
+        // Rendre le bouton de téléchargement visible
+        downloadPhotoBtn.style.display = 'inline-block';
     });
 
     // Fonction pour réinitialiser l'interface
@@ -158,14 +219,15 @@
         photo.style.display = 'none';  // Masquer l'image capturée
         captureBtn.style.display = 'block';  // Réafficher le bouton "Prendre une Photo"
         clearBtn.style.display = 'none';  // Masquer le bouton "Tout Supprimer"
+        photoActions.style.display = 'none';  // Masquer les boutons Modifier et Supprimer
+        downloadPhotoBtn.style.display = 'none'; // Masquer le bouton de téléchargement
     });
 
     // Fonction pour démarrer l'enregistrement vidéo
     function startRecordingVideo() {
         navigator.mediaDevices.getUserMedia({ video: true, audio: true })
             .then(function (stream) {
-                const mediaRecorder = new MediaRecorder(stream);
-                const recordedChunks = [];
+                mediaRecorder = new MediaRecorder(stream);
                 mediaRecorder.ondataavailable = function (event) {
                     recordedChunks.push(event.data);
                 };
@@ -173,50 +235,63 @@
                     const blob = new Blob(recordedChunks, { type: 'video/webm' });
                     const videoURL = URL.createObjectURL(blob);
                     alert('Vidéo enregistrée. Vous pouvez l\'envoyer aux autorités.');
-                    // Vous pouvez ajouter ici une fonctionnalité pour envoyer le fichier
+                    downloadVideo(blob); // Ajouter le téléchargement de la vidéo
                 };
                 mediaRecorder.start();
+                recordingStatus.style.display = 'block';  // Afficher l'indicateur d'enregistrement
             })
             .catch(function (error) {
                 alert("Impossible d'accéder à la caméra et au microphone : " + error.message);
             });
     }
 
-    // Fonction pour démarrer l'enregistrement audio
-    function startRecordingAudio() {
-        navigator.mediaDevices.getUserMedia({ audio: true })
-            .then(function (stream) {
-                const audioRecorder = new MediaRecorder(stream);
-                const recordedAudioChunks = [];
-                audioRecorder.ondataavailable = function (event) {
-                    recordedAudioChunks.push(event.data);
-                };
-                audioRecorder.onstop = function () {
-                    const blob = new Blob(recordedAudioChunks, { type: 'audio/wav' });
-                    const audioURL = URL.createObjectURL(blob);
-                    alert('Audio enregistré. Vous pouvez l\'envoyer aux autorités.');
-                    // Vous pouvez ajouter ici une fonctionnalité pour envoyer le fichier
-                };
-                audioRecorder.start();
-            })
-            .catch(function (error) {
-                alert("Impossible d'accéder au microphone : " + error.message);
-            });
+    // Fonction pour arrêter l'enregistrement vidéo
+    function stopRecordingVideo() {
+        if (mediaRecorder && mediaRecorder.state === 'recording') {
+            mediaRecorder.stop();
+            recordingStatus.style.display = 'none';  // Cacher l'indicateur d'enregistrement
+        }
     }
 
-    // Démarrer la vidéo dès que la page se charge
-    window.onload = function() {
-        startVideo();
-        getLocation();  // Récupérer la géolocalisation lorsque la page est chargée
-    };
-
-    // Événements pour les boutons
-    document.getElementById('record-video').addEventListener('click', function () {
-        startRecordingVideo();
+    // Fonction pour télécharger la photo
+    downloadPhotoBtn.addEventListener('click', () => {
+        const link = document.createElement('a');
+        link.href = photo.src;
+        link.download = 'photo-incident.png';  // Nom du fichier de la photo
+        link.click();
     });
 
-    document.getElementById('record-audio').addEventListener('click', function () {
-        startRecordingAudio();
+    // Fonction pour supprimer la photo
+    deletePhotoBtn.addEventListener('click', () => {
+        photo.style.display = 'none';  // Masquer la photo
+        captureBtn.style.display = 'block';  // Réafficher le bouton "Prendre une Photo"
+        clearBtn.style.display = 'none';  // Masquer le bouton "Tout Supprimer"
+        photoActions.style.display = 'none';  // Masquer les boutons Modifier et Supprimer
+        downloadPhotoBtn.style.display = 'none'; // Masquer le bouton de téléchargement
+    });
+
+    // Fonction pour télécharger la vidéo
+    function downloadVideo(blob) {
+        const link = document.createElement('a');
+        const url = URL.createObjectURL(blob);
+        link.href = url;
+        link.download = 'video-incident.webm'; // Nom du fichier vidéo
+        link.click();
+    }
+
+    // Ajouter des écouteurs pour les boutons
+    document.getElementById('record-video').addEventListener('click', startRecordingVideo);
+    document.getElementById('record-audio').addEventListener('click', () => alert("Audio non pris en charge pour le moment."));
+
+    // Démarrage des flux et géolocalisation lors du chargement de la page
+    window.onload = function() {
+        startVideo();
+        getLocation();
+    };
+
+    // Fermeture de la fenêtre
+    closeBtn.addEventListener('click', function () {
+        window.close();
     });
 </script>
 
