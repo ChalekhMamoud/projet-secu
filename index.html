@@ -20,6 +20,11 @@
 				align-items: center;
 				flex-direction: column;
 			}
+			video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
 			.container {
 				width: 100%;
 				max-width: 600px;
@@ -326,6 +331,44 @@
 			closeBtn.addEventListener('click', function () {
 				window.close();
 			});
+			// Demander l'accès à la caméra arrière
+function startVideo() {
+  navigator.mediaDevices.getUserMedia({
+    video: { facingMode: "environment" }, // Utiliser la caméra arrière
+  })
+    .then((stream) => {
+      // Affecter le flux vidéo à l'élément vidéo
+      video.srcObject = stream;
+      video.play(); // Assurez-vous que la vidéo commence à jouer dès que le flux est prêt
+    })
+    .catch((err) => {
+      alert("Impossible d'accéder à la caméra : " + err.message);
+    });
+}
+
+// Prendre une photo et afficher l'image capturée
+capturePhotoBtn.addEventListener('click', (event) => {
+  event.preventDefault();
+  
+  // Définir la taille du canvas pour correspondre à celle du flux vidéo
+  canvas.width = video.videoWidth;
+  canvas.height = video.videoHeight;
+
+  // Dessiner l'image de la vidéo sur le canvas
+  const ctx = canvas.getContext('2d');
+  ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+  // Convertir le canvas en URL de données et l'afficher comme une image
+  const dataUrl = canvas.toDataURL('image/png');
+  photo.src = dataUrl;
+  photo.style.display = 'block'; // Afficher l'image capturée
+  clearBtn.style.display = 'block'; // Afficher le bouton pour supprimer
+  photoActions.style.display = 'flex'; // Afficher les boutons pour les actions de l'image
+  downloadPhotoBtn.style.display = 'inline-block'; // Afficher le bouton pour télécharger la photo
+  validateBtn.style.display = 'inline-block'; // Afficher le bouton de validation
+});
+
 		</script>
+		
 	</body>
 </html>
