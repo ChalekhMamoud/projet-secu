@@ -113,7 +113,9 @@
         }
         #photo-actions {
             margin-top: 20px;
-            display: none;
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
         }
     </style>
 </head>
@@ -126,21 +128,24 @@
         <!-- Boutons pour prendre une photo ou enregistrer une vidéo -->
         <button class="button" id="record-video">Enregistrer une Vidéo</button>
         <button class="button" id="record-audio">Enregistrer Audio</button>
+        <button class="button" id="captureBtn">Prendre une Photo</button>
 
         <div class="camera-container">
-            <button id="captureBtn" class="button">Prendre une Photo</button>
             <video id="video" width="100%" height="auto" autoplay></video>
             <canvas id="canvas" style="display: none;"></canvas>
             <img id="photo" src="" alt="Photo Capturée" style="display: none;">
         </div>
 
+        <!-- Affichage des boutons en bas -->
+        <div id="photo-actions" style="display: flex; justify-content: center; width: 100%;">
+            <button class="modify-btn" id="modify-photo" style="display: none;">Modifier</button>
+            <button class="delete-btn" id="delete-photo" style="display: none;">Supprimer</button>
+            <button class="download-btn" id="download-photo" style="display: none;">Télécharger</button>
+        </div>
+
+        <!-- Bouton pour supprimer l'image ou la vidéo -->
         <button id="clearBtn" class="button" style="display: none;">Tout Supprimer</button>
         <div id="recordingStatus" style="display: none;">Enregistrement en cours...</div>
-        <div id="photo-actions">
-            <button class="modify-btn" id="modify-photo">Modifier la Photo</button>
-            <button class="delete-btn" id="delete-photo">Supprimer la Photo</button>
-            <button class="download-btn" id="download-photo" style="display: none;">Télécharger la Photo</button>
-        </div>
     </div>
 
 <script>
@@ -180,20 +185,6 @@
             });
     }
 
-    // Récupérer la géolocalisation de l'utilisateur
-    function getLocation() {
-        if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(function (position) {
-                userLocation.latitude = position.coords.latitude;
-                userLocation.longitude = position.coords.longitude;
-            }, function (error) {
-                alert("Erreur lors de la récupération de la géolocalisation: " + error.message);
-            });
-        } else {
-            alert("La géolocalisation n'est pas disponible.");
-        }
-    }
-
     // Prendre une photo à partir du flux vidéo
     captureBtn.addEventListener('click', () => {
         // Dessiner l'image de la vidéo sur le canvas
@@ -208,9 +199,9 @@
         photo.style.display = 'block';  // Afficher l'image capturée
         captureBtn.style.display = 'none';  // Cacher le bouton de capture
         clearBtn.style.display = 'block';  // Afficher le bouton "Tout Supprimer"
-        photoActions.style.display = 'block'; // Afficher les boutons Modifier et Supprimer
-
-        // Rendre le bouton de téléchargement visible
+        photoActions.style.display = 'flex'; // Afficher les boutons Modifier et Supprimer
+        modifyPhotoBtn.style.display = 'inline-block';
+        deletePhotoBtn.style.display = 'inline-block';
         downloadPhotoBtn.style.display = 'inline-block';
     });
 
@@ -220,7 +211,6 @@
         captureBtn.style.display = 'block';  // Réafficher le bouton "Prendre une Photo"
         clearBtn.style.display = 'none';  // Masquer le bouton "Tout Supprimer"
         photoActions.style.display = 'none';  // Masquer les boutons Modifier et Supprimer
-        downloadPhotoBtn.style.display = 'none'; // Masquer le bouton de téléchargement
     });
 
     // Fonction pour démarrer l'enregistrement vidéo
@@ -233,7 +223,6 @@
                 };
                 mediaRecorder.onstop = function () {
                     const blob = new Blob(recordedChunks, { type: 'video/webm' });
-                    const videoURL = URL.createObjectURL(blob);
                     alert('Vidéo enregistrée. Vous pouvez l\'envoyer aux autorités.');
                     downloadVideo(blob); // Ajouter le téléchargement de la vidéo
                 };
@@ -286,7 +275,6 @@
     // Démarrage des flux et géolocalisation lors du chargement de la page
     window.onload = function() {
         startVideo();
-        getLocation();
     };
 
     // Fermeture de la fenêtre
