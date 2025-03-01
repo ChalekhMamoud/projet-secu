@@ -114,7 +114,7 @@
         #photo-actions {
             margin-top: 20px;
             display: flex;
-            justify-content: space-between;
+            justify-content: center;
             width: 100%;
         }
     </style>
@@ -142,8 +142,9 @@
 
         <!-- Affichage des boutons en bas -->
         <div id="photo-actions" style="display: flex; justify-content: center; width: 100%;">
-            <button class="download-btn" id="download-photo" style="display: none;">Télécharger</button>
-            <button class="delete-btn" id="delete-photo" style="display: none;">Supprimer</button>
+            <button class="download-btn" id="download-photo" style="display: none;">Télécharger la Photo</button>
+            <button class="download-btn" id="download-audio" style="display: none;">Télécharger l'Audio</button>
+            <button class="modify-btn" id="modify-photo" style="display: none;">Modifier</button>
         </div>
 
         <!-- Bouton pour supprimer l'image ou la vidéo -->
@@ -161,7 +162,7 @@
     const closeBtn = document.getElementById('closeBtn');
     const recordingStatus = document.getElementById('recordingStatus');
     const modifyPhotoBtn = document.getElementById('modify-photo');
-    const deletePhotoBtn = document.getElementById('delete-photo');
+    const downloadAudioBtn = document.getElementById('download-audio');
     const downloadPhotoBtn = document.getElementById('download-photo');
     const photoActions = document.getElementById('photo-actions');
     const actionChoice = document.getElementById('actionChoice');
@@ -206,9 +207,9 @@
         photo.src = dataUrl;
         photo.style.display = 'block';  // Afficher l'image capturée
         clearBtn.style.display = 'block';  // Afficher le bouton "Tout Supprimer"
-        photoActions.style.display = 'flex'; // Afficher les boutons Télécharger et Supprimer
+        photoActions.style.display = 'flex'; // Afficher les boutons Télécharger et Modifier
         downloadPhotoBtn.style.display = 'inline-block';
-        deletePhotoBtn.style.display = 'inline-block';
+        modifyPhotoBtn.style.display = 'inline-block';
     });
 
     // Enregistrer une vidéo
@@ -293,20 +294,18 @@
         link.click();
     });
 
-    // Supprimer la photo ou vidéo
-    deletePhotoBtn.addEventListener('click', () => {
-        photo.style.display = 'none';  // Masquer l'image capturée
-        captureBtn.style.display = 'block';  // Réafficher le bouton "Alerter"
-        clearBtn.style.display = 'none';  // Masquer le bouton "Tout Supprimer"
-        photoActions.style.display = 'none';  // Masquer les boutons Télécharger et Supprimer
+    // Modifier la photo
+    modifyPhotoBtn.addEventListener('click', () => {
+        // Ajouter des fonctionnalités de modification de la photo ici
+        alert('Modification de la photo à implémenter.');
     });
 
-    // Fonction pour réinitialiser l'interface
+    // Supprimer l'image ou vidéo
     clearBtn.addEventListener('click', () => {
         photo.style.display = 'none';  // Masquer l'image capturée
         captureBtn.style.display = 'block';  // Réafficher le bouton "Alerter"
         clearBtn.style.display = 'none';  // Masquer le bouton "Tout Supprimer"
-        photoActions.style.display = 'none';  // Masquer les boutons Télécharger et Supprimer
+        photoActions.style.display = 'none';  // Masquer les boutons Télécharger et Modifier
     });
 
     // Démarrage des flux vidéo au chargement de la page
